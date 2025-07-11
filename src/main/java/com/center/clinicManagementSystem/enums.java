@@ -280,3 +280,72 @@ public enum DayOfWeek {
         return displayName;
     }
 }
+
+public enum ChatRoomType {
+    PRIVATE("Privé"),
+    GROUP("Groupe"),
+    CONSULTATION("Consultation"),
+    EMERGENCY("Urgence");
+    
+    private final String displayName;
+    
+    ChatRoomType(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+public enum MessageType {
+    TEXT("Texte"),
+    IMAGE("Image"),
+    FILE("Fichier"),
+    AUDIO("Audio"),
+    VIDEO("Vidéo"),
+    SYSTEM("Système");
+    
+    private final String displayName;
+    
+    MessageType(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+public enum MessageStatus {
+    SENT("Envoyé"),
+    DELIVERED("Livré"),
+    READ("Lu"),
+    FAILED("Échec");
+    
+    private final String displayName;
+    
+    MessageStatus(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+public enum ParticipantRole {
+    ADMIN("Administrateur"),
+    MODERATOR("Modérateur"),
+    MEMBER("Membre");
+    
+    private final String displayName;
+    
+    ParticipantRole(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}

@@ -1,4 +1,4 @@
-package com.clinic.entity;
+package com.clinic.entity.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

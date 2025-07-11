@@ -1,4 +1,4 @@
-package com.clinic.entity;
+package com.clinic.entity.model;
 
 import com.clinic.enums.BloodType;
 import com.clinic.enums.EmergencyContactRelation;

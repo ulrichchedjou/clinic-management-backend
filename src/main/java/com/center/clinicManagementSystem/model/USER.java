@@ -1,4 +1,4 @@
-package com.clinic.entity;
+package com.clinic.entity.model;
 
 import com.clinic.enums.Gender;
 import com.clinic.enums.UserRole;
