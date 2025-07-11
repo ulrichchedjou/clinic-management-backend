@@ -1,4 +1,4 @@
-import com.clinic.enums.ChatRoomType;
+import com.center.clinicManagementSystem.enums.ChatRoomType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

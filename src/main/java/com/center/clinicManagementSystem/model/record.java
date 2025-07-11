@@ -1,5 +1,8 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
+import com.center.clinicManagementSystem.model.Appointment;
+import com.center.clinicManagementSystem.model.Doctor;
+import com.center.clinicManagementSystem.model.Patient;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

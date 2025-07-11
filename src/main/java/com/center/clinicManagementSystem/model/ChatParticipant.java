@@ -1,6 +1,7 @@
 package com.center.clinicManagementSystem.model;
-
-import com.clinic.enums.ParticipantRole;
+import com.center.clinicManagementSystem.model.ChatRoom;
+import com.center.clinicManagementSystem.model.USER;
+import com.center.clinicManagementSystem.enums.ParticipantRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +32,7 @@ public class ChatParticipant {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private USER user;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

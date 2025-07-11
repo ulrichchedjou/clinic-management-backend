@@ -1,6 +1,8 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.PrescriptionStatus;
+import com.center.clinicManagementSystem.enums.PrescriptionStatus;
+import com.center.clinicManagementSystem.model.Doctor;
+import com.center.clinicManagementSystem.model.MedicalRecord;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

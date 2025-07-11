@@ -1,8 +1,10 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.Gender;
-import com.clinic.enums.UserRole;
-import com.clinic.enums.UserStatus;
+import com.center.clinicManagementSystem.enums.Gender;
+import com.center.clinicManagementSystem.enums.UserRole;
+import com.center.clinicManagementSystem.enums.UserStatus;
+import com.center.clinicManagementSystem.model.Doctor;
+import com.center.clinicManagementSystem.model.Patient;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -114,6 +116,12 @@ public class User implements UserDetails {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_expiry")
+    private LocalDateTime passwordResetExpiry;
 
     // Relations
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

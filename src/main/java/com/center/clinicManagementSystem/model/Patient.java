@@ -1,8 +1,11 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.BloodType;
-import com.clinic.enums.EmergencyContactRelation;
-import com.clinic.enums.MaritalStatus;
+import com.center.clinicManagementSystem.enums.BloodType;
+import com.center.clinicManagementSystem.enums.EmergencyContactRelation;
+import com.center.clinicManagementSystem.enums.MaritalStatus;
+import com.center.clinicManagementSystem.model.Appointment;
+import com.center.clinicManagementSystem.model.MedicalRecord;
+import com.center.clinicManagementSystem.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
