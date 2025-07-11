@@ -2,7 +2,7 @@ package com.center.clinicManagementSystem.controller;
 
 import com.center.clinicManagementSystem.dtos.*;
 import com.center.clinicManagementSystem.responses.ApiResponse;
-import com.center.clinicManagementSystem.service.ChatService;
+import com.center.clinicManagementSystem.services.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -234,4 +234,12 @@ public class ChatController {
                     .data(messages)
                     .build());
         } catch (Exception e) {
-            log.error("Erreur lors de la recherche: {}", e
+            log.error("Erreur lors de la recherche: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.<List<ChatMessageDTO>>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+}

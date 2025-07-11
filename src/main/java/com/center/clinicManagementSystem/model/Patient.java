@@ -126,8 +126,8 @@ public class Patient {
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Invoice> invoices;
 
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<VitalSigns> vitalSigns;
+    /*@OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<VitalSigns> vitalSigns;*/
 
     // Méthodes utilitaires
     public String getFullName() {
@@ -152,4 +152,16 @@ public class Patient {
         BigDecimal bmi = getBMI();
         if (bmi == null) {
             return "Inconnu";
-        
+        }
+        if (bmi.compareTo(new BigDecimal("18.5")) < 0) {
+            return "Insuffisance pondérale";
+        } else if (bmi.compareTo(new BigDecimal("25")) < 0) {
+            return "Poids normal";
+        } else if (bmi.compareTo(new BigDecimal("30")) < 0) {
+            return "Surpoids";
+        } else {
+            return "Obésité";
+        }
+    }
+
+}

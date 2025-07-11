@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Reminder</title>
+</head>
+<body>
+    <p>Bonjour <b th:text="${patientName}">Patient</b>,</p>
+    <p>Ceci est un rappel pour votre rendez-vous :</p>
+    <ul>
+        <li><b>Date :</b> <span th:text="${date}">01/01/2024</span></li>
+        <li><b>Heure :</b> <span th:text="${time}">10:00</span></li>
+        <li><b>Médecin :</b> <span th:text="${doctorName}">Dr. Smith</span></li>
+        <li><b>Lieu :</b> <span th:text="${location}">Clinique ABC</span></li>
+    </ul>
+    <p>Merci de votre confiance.</p>
+</body>
+</html>

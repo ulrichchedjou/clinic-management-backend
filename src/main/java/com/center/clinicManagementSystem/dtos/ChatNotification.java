@@ -1,5 +1,5 @@
 package com.center.clinicManagementSystem.dtos;
-
+import com.center.clinicManagementSystem.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

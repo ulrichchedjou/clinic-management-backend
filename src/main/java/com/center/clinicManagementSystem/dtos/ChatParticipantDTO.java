@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import com.center.clinicManagementSystem.enums.ParticipantRole;
 
 @Data
 @NoArgsConstructor

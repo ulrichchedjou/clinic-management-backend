@@ -1,5 +1,5 @@
 package com.center.clinicManagementSystem.dtos;
-
+import com.center.clinicManagementSystem.enums.ChatRoomType;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

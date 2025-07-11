@@ -1,7 +1,7 @@
 package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.MessageType;
-import com.clinic.enums.MessageStatus;
+import com.center.clinicManagementSystem.enums.MessageType;
+import com.center.clinicManagementSystem.enums.MessageStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

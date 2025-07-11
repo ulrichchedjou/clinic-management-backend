@@ -1,6 +1,6 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.DoctorStatus;
+import com.center.clinicManagementSystem.enums.DoctorStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -46,10 +46,10 @@ public class Doctor {
     @Column(name = "license_number", unique = true, nullable = false, length = 50)
     private String licenseNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialization_id", nullable = false)
     @NotNull(message = "La spécialisation est obligatoire")
-    private Specialization specialization;
+    private Specialization specialization;*/
 
     @Column(name = "years_of_experience")
     private Integer yearsOfExperience;

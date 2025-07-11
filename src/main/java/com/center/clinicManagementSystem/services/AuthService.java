@@ -219,7 +219,6 @@ public class AuthService {
             JwtResponse.DoctorInfo doctorInfo = JwtResponse.DoctorInfo.builder()
                     .id(user.getDoctor().getId())
                     .licenseNumber(user.getDoctor().getLicenseNumber())
-                    .specialization(user.getDoctor().getSpecialization())
                     .officeNumber(user.getDoctor().getOfficeNumber())
                     .isAvailableForEmergency(user.getDoctor().getIsAvailableForEmergency())
                     .build();

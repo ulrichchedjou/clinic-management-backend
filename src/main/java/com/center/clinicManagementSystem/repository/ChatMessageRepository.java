@@ -1,5 +1,6 @@
 package com.center.clinicManagementSystem.repository;
-
+import com.center.clinicManagementSystem.model.ChatMessage;
+import com.center.clinicManagementSystem.model.ChatRoom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

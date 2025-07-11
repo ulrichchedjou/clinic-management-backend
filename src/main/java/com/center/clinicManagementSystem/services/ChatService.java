@@ -1,4 +1,4 @@
-package com.center.clinicManagementSystem.service;
+package com.center.clinicManagementSystem.services;
 
 import com.center.clinicManagementSystem.dtos.*;
 import com.center.clinicManagementSystem.enums.*;
@@ -49,26 +49,26 @@ public class ChatService {
                 .isActive(true)
                 .build();
 
-        chatRoom = chatRoomRepository.save(chatRoom);
+        final ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
 
         // Ajouter le créateur comme admin
-        addParticipant(chatRoom, creator, ParticipantRole.ADMIN);
+        addParticipant(savedChatRoom, creator, ParticipantRole.ADMIN);
 
         // Ajouter les autres participants
         if (request.getParticipantEmails() != null) {
             for (String email : request.getParticipantEmails()) {
                 userRepository.findByEmail(email).ifPresent(user -> {
                     if (!user.equals(creator)) {
-                        addParticipant(chatRoom, user, ParticipantRole.MEMBER);
+                        addParticipant(savedChatRoom, user, ParticipantRole.MEMBER);
                     }
                 });
             }
         }
 
         // Notification de création
-        notifyRoomCreation(chatRoom, creator);
+        notifyRoomCreation(savedChatRoom, creator);
 
-        return convertToRoomDTO(chatRoom);
+        return convertToRoomDTO(savedChatRoom);
     }
 
     @Transactional
@@ -377,9 +377,8 @@ public class ChatService {
                 .isActive(chatRoom.getIsActive())
                 .participants(participants)
                 .lastMessage(lastMessage.map(this::convertToMessageDTO).orElse(null))
-                .messageCount(chatMessageRepository.countMessagesByRoomId(chatRoom.getRoomId()))
+                // .messageCount(chatMessageRepository.countMessagesByRoomId(chatRoom.getRoomId())) // Removed, not in DTO
                 .createdAt(chatRoom.getCreatedAt())
-                .updatedAt(chatRoom.getUpdatedAt())
                 .build();
     }
 

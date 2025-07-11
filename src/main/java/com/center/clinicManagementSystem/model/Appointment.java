@@ -1,7 +1,9 @@
-package com.clinic.entity.model;
+package com.center.clinicManagementSystem.model;
 
-import com.clinic.enums.AppointmentStatus;
-import com.clinic.enums.AppointmentType;
+import com.center.clinicManagementSystem.model.Patient;
+import com.center.clinicManagementSystem.model.Doctor;
+import com.center.clinicManagementSystem.enums.AppointmentStatus;
+import com.center.clinicManagementSystem.enums.AppointmentType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

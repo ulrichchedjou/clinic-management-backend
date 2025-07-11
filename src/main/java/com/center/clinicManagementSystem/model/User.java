@@ -95,6 +95,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean emailVerified = false;
 
+    public Boolean isEmailVerified() {
+        return emailVerified;
+    }
+
     @Column(name = "phone_verified")
     @Builder.Default
     private Boolean phoneVerified = false;
