@@ -1,0 +1,748 @@
+openapi: 3.0.1
+info:
+  title: API d'Authentification et de Chat - Système de Gestion de Clinique
+  description: |
+    # API d'Authentification et de Chat
+    
+    Cette API fournit des services d'authentification sécurisée et de messagerie en temps réel
+    pour le système de gestion de clinique. Elle permet aux utilisateurs de s'authentifier,
+    de gérer leurs sessions, et de communiquer via des salons de discussion privés ou de groupe.
+    
+    ## Caractéristiques principales
+    - Authentification sécurisée avec JWT
+    - Rafraîchissement automatique des tokens
+    - Gestion des salles de discussion (1:1 et groupes)
+    - Messagerie en temps réel avec WebSocket
+    - Partage de fichiers sécurisé
+    
+    ## Bonnes pratiques
+    - Utilisez toujours HTTPS
+    - Stockez les tokens de rafraîchissement de manière sécurisée
+    - Implémentez une gestion d'erreur côté client
+    - Limitez la taille des fichiers téléversés
+    
+    ## Codes d'erreur courants
+    - 400 : Requête mal formée
+    - 401 : Non authentifié
+    - 403 : Accès refusé
+    - 404 : Ressource non trouvée
+    - 429 : Trop de requêtes
+    - 500 : Erreur serveur
+    
+  version: 1.0.0
+  contact:
+    name: Support Technique
+    email: support@clinic-management.com
+    url: https://support.clinic-management.com
+  license:
+    name: Propriétaire
+    url: https://clinic-management.com/terms
+
+servers:
+  - url: /api
+    description: Serveur principal de l'API
+
+tags:
+  - name: Authentification
+    description: Opérations d'authentification et d'autorisation
+  - name: Chat
+    description: Gestion des salons de discussion et des messages
+  - name: Fichiers
+    description: Téléchargement et gestion des fichiers partagés
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Réponse d'erreur standardisée
+      required:
+        - success
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Indique si la requête a réussi
+          example: false
+        message:
+          type: string
+          description: Message d'erreur détaillé
+          example: "Authentification requise"
+        error:
+          type: string
+          description: Code d'erreur technique (pour le débogage)
+          example: "AUTH_REQUIRED"
+        timestamp:
+          type: string
+          format: date-time
+          description: Horodatage de l'erreur
+          example: "2025-07-17T10:30:00Z"
+        path:
+          type: string
+          description: Chemin de l'endpoint qui a causé l'erreur
+          example: "/api/auth/login"
+        details:
+          type: array
+          description: Détails supplémentaires sur les erreurs de validation
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Champ concerné par l'erreur
+                example: "email"
+              message:
+                type: string
+                description: Message d'erreur pour ce champ
+                example: "doit être une adresse email valide"
+      example:
+        success: false
+        message: "Erreur de validation des données"
+        error: "VALIDATION_ERROR"
+        timestamp: "2025-07-17T10:30:00Z"
+        path: "/api/auth/register"
+        details:
+          - field: "email"
+            message: "doit être une adresse email valide"
+          - field: "password"
+            message: "le mot de passe doit contenir au moins 8 caractères"
+    
+    LoginRequest:
+      type: object
+      description: Requête de connexion utilisateur
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Adresse email de l'utilisateur
+          example: utilisateur@clinique.fr
+          minLength: 5
+          maxLength: 100
+          pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+          x-example-description: "Doit être une adresse email valide"
+        password:
+          type: string
+          format: password
+          description: Mot de passe de l'utilisateur
+          example: MonMotDePasse123!
+          minLength: 8
+          maxLength: 100
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+          x-example-description: "Doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial"
+      example:
+        email: "medecin.principal@clinique.fr"
+        password: "Medecin123!"
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST \
+              https://api.clinique.com/api/auth/login \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "email": "medecin.principal@clinique.fr",
+                "password": "MonMotDePasse123!"
+              }'
+    
+    JwtResponse:
+      type: object
+      description: Réponse contenant les jetons JWT d'authentification
+      required:
+        - tokenType
+        - accessToken
+        - expiresIn
+      properties:
+        tokenType:
+          type: string
+          description: Type de token (toujours "Bearer")
+          example: "Bearer"
+          enum: ["Bearer"]
+        accessToken:
+          type: string
+          description: |
+            Jeton d'accès JWT. Doit être inclus dans le header 'Authorization' des requêtes protégées.
+            Format: `Bearer <token>`
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+          minLength: 100
+          maxLength: 1000
+          x-security:
+            type: jwt
+            description: JWT contenant les claims de l'utilisateur
+        refreshToken:
+          type: string
+          description: |
+            Jeton de rafraîchissement utilisé pour obtenir un nouveau jeton d'accès.
+            Stockez ce token de manière sécurisée.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+          minLength: 100
+          maxLength: 1000
+        expiresIn:
+          type: integer
+          description: Durée de validité du jeton d'accès en secondes
+          example: 3600
+          minimum: 60
+          maximum: 86400
+        user:
+          $ref: '#/components/schemas/UserInfo'
+      example:
+        tokenType: "Bearer"
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn: 3600
+        user:
+          id: "507f1f77bcf86cd799439011"
+          email: "medecin.principal@clinique.fr"
+          fullName: "Dr. Jean Martin"
+          role: "DOCTOR"
+          isActive: true
+    
+    UserInfo:
+      type: object
+      description: Informations de base sur l'utilisateur authentifié
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "507f1f77bcf86cd799439011"
+        email:
+          type: string
+          format: email
+          example: "medecin.principal@clinique.fr"
+        fullName:
+          type: string
+          example: "Dr. Jean Martin"
+        role:
+          type: string
+          enum: ["ADMIN", "DOCTOR", "NURSE", "PATIENT", "RECEPTIONIST"]
+          example: "DOCTOR"
+        isActive:
+          type: boolean
+          example: true
+    
+    RefreshTokenRequest:
+      type: object
+      description: Requête de rafraîchissement de token
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Jeton de rafraîchissement valide obtenu lors de la connexion
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicmVmcmVzaCI6dHJ1ZSwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+          minLength: 100
+          maxLength: 1000
+          x-security:
+            type: jwt
+            description: JWT avec le claim 'refresh' à true
+      example:
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwicmVmcmVzaCI6dHJ1ZSwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST \
+              https://api.clinique.com/api/auth/refresh-token \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }'
+    
+    ChatRoomDTO:
+      type: object
+      description: Représente un salon de discussion
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique du salon
+          example: "507f1f77bcf86cd799439011"
+          readOnly: true
+        name:
+          type: string
+          description: Nom du salon
+          example: "Équipe Médicale A"
+          minLength: 2
+          maxLength: 100
+        description:
+          type: string
+          description: Description du salon
+          example: "Discussion pour l'équipe médicale du service A"
+          maxLength: 500
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création du salon
+          example: "2025-07-15T14:30:00Z"
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière mise à jour du salon
+          example: "2025-07-16T09:15:30Z"
+          readOnly: true
+        createdBy:
+          type: string
+          format: uuid
+          description: ID de l'utilisateur ayant créé le salon
+          example: "507f1f77bcf86cd799439012"
+          readOnly: true
+        participantCount:
+          type: integer
+          description: Nombre de participants dans le salon
+          example: 5
+          minimum: 1
+          readOnly: true
+        isPrivate:
+          type: boolean
+          description: Indique si le salon est privé
+          example: false
+          default: false
+        lastMessage:
+          $ref: '#/components/schemas/LastMessageInfo'
+        unreadCount:
+          type: integer
+          description: Nombre de messages non lus par l'utilisateur actuel
+          example: 3
+          minimum: 0
+          readOnly: true
+      example:
+        id: "507f1f77bcf86cd799439011"
+        name: "Équipe Cardiologie"
+        description: "Discussion pour l'équipe de cardiologie"
+        createdAt: "2025-07-15T14:30:00Z"
+        updatedAt: "2025-07-16T09:15:30Z"
+        createdBy: "507f1f77bcf86cd799439012"
+        participantCount: 5
+        isPrivate: false
+        lastMessage:
+          content: "Bonjour à tous, la réunion est reportée à demain."
+          senderName: "Dr. Martin"
+          timestamp: "2025-07-16T09:15:30Z"
+        unreadCount: 2
+    
+    LastMessageInfo:
+      type: object
+      description: Informations sur le dernier message d'un salon
+      properties:
+        content:
+          type: string
+          description: Contenu du message (tronqué si trop long)
+          example: "Bonjour, je voulais vous informer que..."
+          maxLength: 100
+        senderName:
+          type: string
+          description: Nom de l'expéditeur
+          example: "Dr. Jean Martin"
+        timestamp:
+          type: string
+          format: date-time
+          description: Date d'envoi du message
+          example: "2025-07-16T09:15:30Z"
+    
+    ChatMessageDTO:
+      type: object
+      description: Représente un message dans un salon de discussion
+      required:
+        - id
+        - content
+        - senderId
+        - senderName
+        - timestamp
+        - roomId
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique du message
+          example: "507f1f77bcf86cd799439012"
+          readOnly: true
+        roomId:
+          type: string
+          format: uuid
+          description: Identifiant du salon contenant le message
+          example: "507f1f77bcf86cd799439011"
+        content:
+          type: string
+          description: Contenu textuel du message (peut être vide pour les messages contenant uniquement des fichiers)
+          example: "Bonjour, voici les résultats des analyses demandés."
+          maxLength: 2000
+          minLength: 1
+        senderId:
+          type: string
+          format: uuid
+          description: Identifiant de l'expéditeur
+          example: "507f1f77bcf86cd799439013"
+        senderName:
+          type: string
+          description: Nom complet de l'expéditeur
+          example: "Dr. Jean Martin"
+        senderEmail:
+          type: string
+          format: email
+          description: Email de l'expéditeur
+          example: "jean.martin@clinique.fr"
+        senderAvatar:
+          type: string
+          format: uri
+          description: URL de l'avatar de l'expéditeur
+          example: "/api/users/avatar/507f1f77bcf86cd799439013"
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Date d'envoi du message
+          example: "2025-07-16T09:15:30Z"
+          readOnly: true
+        isRead:
+          type: boolean
+          description: Indique si le message a été lu par le destinataire (pour les messages directs)
+          example: false
+          default: false
+        readBy:
+          type: array
+          description: Liste des identifiants des utilisateurs ayant lu le message
+          items:
+            type: string
+            format: uuid
+          example: ["507f1f77bcf86cd799439013", "507f1f77bcf86cd799439014"]
+        isEdited:
+          type: boolean
+          description: Indique si le message a été modifié
+          example: false
+          readOnly: true
+        editedAt:
+          type: string
+          format: date-time
+          description: Date de dernière modification du message
+          example: "2025-07-16T09:16:45Z"
+          nullable: true
+          readOnly: true
+        fileUrl:
+          type: string
+          format: uri
+          description: URL de téléchargement du fichier joint
+          example: "/api/files/attachments/document-2025-07-16.pdf"
+          nullable: true
+        fileName:
+          type: string
+          description: Nom original du fichier joint
+          example: "resultats-analyse-sang.pdf"
+          maxLength: 255
+          nullable: true
+        fileSize:
+          type: integer
+          description: Taille du fichier en octets
+          example: 1048576
+          minimum: 1
+          nullable: true
+        fileType:
+          type: string
+          description: Type MIME du fichier
+          example: "application/pdf"
+          nullable: true
+        filePreviewUrl:
+          type: string
+          format: uri
+          description: URL de prévisualisation du fichier (si disponible)
+          example: "/api/files/previews/document-2025-07-16.jpg"
+          nullable: true
+        replyToMessageId:
+          type: string
+          format: uuid
+          description: Identifiant du message auquel celui-ci répond
+          example: "507f1f77bcf86cd799439011"
+          nullable: true
+        replyToMessagePreview:
+          type: object
+          description: Aperçu du message auquel celui-ci répond
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "507f1f77bcf86cd799439011"
+            senderName:
+              type: string
+              example: "Dr. Sophie Martin"
+            content:
+              type: string
+              example: "Pouvez-vous m'envoyer les résultats des analyses ?"
+            isFile:
+              type: boolean
+              example: false
+      example:
+        id: "507f1f77bcf86cd799439012"
+        roomId: "507f1f77bcf86cd799439011"
+        content: "Voici les résultats des analyses demandés."
+        senderId: "507f1f77bcf86cd799439013"
+        senderName: "Dr. Jean Martin"
+        senderEmail: "jean.martin@clinique.fr"
+        senderAvatar: "/api/users/avatar/507f1f77bcf86cd799439013"
+        timestamp: "2025-07-16T09:15:30Z"
+        isRead: false
+        readBy: ["507f1f77bcf86cd799439013"]
+        isEdited: false
+        fileUrl: "/api/files/attachments/resultats-analyse-sang-2025-07-16.pdf"
+        fileName: "resultats-analyse-sang.pdf"
+        fileSize: 1048576
+        fileType: "application/pdf"
+        filePreviewUrl: "/api/files/previews/resultats-analyse-sang-2025-07-16.jpg"
+        replyToMessageId: "507f1f77bcf86cd799439011"
+        replyToMessagePreview:
+          id: "507f1f77bcf86cd799439011"
+          senderName: "Dr. Sophie Martin"
+          content: "Pouvez-vous m'envoyer les résultats des analyses ?"
+          isFile: false
+    
+    CreateChatRoomRequest:
+      type: object
+      required:
+        - name
+        - participantEmails
+      properties:
+        name:
+          type: string
+          example: "Équipe de développement"
+        description:
+          type: string
+          example: "Discussion pour l'équipe de développement"
+        participantEmails:
+          type: array
+          items:
+            type: string
+            format: email
+          example: ["user1@example.com", "user2@example.com"]
+    
+    SendMessageRequest:
+      type: object
+      required:
+        - roomId
+        - content
+      properties:
+        roomId:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        content:
+          type: string
+          example: "Bonjour à tous !"
+        replyToMessageId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+
+paths:
+  /auth/login:
+    post:
+      tags: [Authentification]
+      summary: Authentifier un utilisateur
+      description: Authentifie un utilisateur avec son email et son mot de passe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentification réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentification échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /auth/refresh-token:
+    post:
+      tags: [Authentification]
+      summary: Rafraîchir le token d'accès
+      description: Génère un nouveau token d'accès à partir d'un refresh token valide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Nouveau token généré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Token de rafraîchissement invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /chat/rooms:
+    get:
+      tags: [Chat]
+      summary: Lister les salons de l'utilisateur
+      description: Récupère la liste des salons auxquels l'utilisateur est abonné
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des salons récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatRoomDTO'
+    
+    post:
+      tags: [Chat]
+      summary: Créer un nouveau salon
+      description: Crée un nouveau salon de discussion avec les participants spécifiés
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChatRoomRequest'
+      responses:
+        '201':
+          description: Salon créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRoomDTO'
+        '400':
+          description: Données de la requête invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /chat/rooms/{roomId}/messages:
+    get:
+      tags: [Chat]
+      summary: Récupérer les messages d'un salon
+      description: Récupère les messages d'un salon avec pagination
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+          description: ID du salon
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+          description: Numéro de la page (commence à 0)
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          description: Nombre d'éléments par page (max 100)
+      responses:
+        '200':
+          description: Messages récupérés avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessageDTO'
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalElements:
+                    type: integer
+                    example: 97
+                  size:
+                    type: integer
+                    example: 20
+                  number:
+                    type: integer
+                    example: 0
+  
+  /chat/messages:
+    post:
+      tags: [Chat]
+      summary: Envoyer un message
+      description: Envoie un message dans un salon de discussion
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message envoyé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageDTO'
+  
+  /chat/rooms/{roomId}/upload:
+    post:
+      tags: [Fichiers, Chat]
+      summary: Téléverser un fichier
+      description: Téléverse un fichier dans un salon de discussion
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+          description: ID du salon
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier à téléverser
+      responses:
+        '201':
+          description: Fichier téléversé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageDTO'

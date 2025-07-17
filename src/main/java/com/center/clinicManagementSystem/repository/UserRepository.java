@@ -36,4 +36,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.enabled = true")
     Long countByRoleAndEnabled(@Param("role") UserRole role);
+    
+    @Query("SELECT u FROM User u WHERE u.lastLogin BETWEEN :start AND :end")
+    List<User> findByLastLoginBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt BETWEEN :start AND :end")
+    Long countByCreatedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

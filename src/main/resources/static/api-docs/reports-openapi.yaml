@@ -1,0 +1,272 @@
+openapi: 3.0.1
+info:
+  title: API de Rapports - Système de Gestion de Clinique
+  description: |
+    Cette API permet de générer et d'exporter des rapports sur l'activité de la clinique,
+    y compris les statistiques de rendez-vous, l'activité des utilisateurs et les performances du système.
+  version: 1.0.0
+  contact:
+    name: Support Technique
+    email: support@clinic-management.com
+    
+servers:
+  - url: /api/reports
+    description: Serveur principal de l'API de rapports
+
+tags:
+  - name: Rapports
+    description: Opérations liées à la génération et à l'exportation de rapports
+  - name: Graphiques
+    description: Données pour les visualisations et tableaux de bord
+  - name: Export
+    description: Exportation des rapports dans différents formats
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    ReportRequest:
+      type: object
+      required:
+        - startDate
+        - endDate
+        - reportType
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Date de début de la période du rapport
+          example: "2025-01-01"
+        endDate:
+          type: string
+          format: date
+          description: Date de fin de la période du rapport
+          example: "2025-12-31"
+        reportType:
+          type: string
+          enum: [APPOINTMENT_STATS, USER_ACTIVITY, SYSTEM_PERFORMANCE, ERROR_ANALYSIS]
+          description: Type de rapport à générer
+          example: "APPOINTMENT_STATS"
+    
+    ChartData:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Titre du graphique
+        type:
+          type: string
+          enum: [bar, line, pie, doughnut, radar, polarArea]
+          description: Type de graphique
+        labels:
+          type: array
+          items:
+            type: string
+          description: Étiquettes pour les axes ou catégories
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChartDataset'
+        options:
+          type: object
+          description: Options de configuration du graphique
+    
+    ChartDataset:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Légende du jeu de données
+        data:
+          type: array
+          items:
+            type: number
+          description: Données numériques
+        backgroundColor:
+          type: array
+          items:
+            type: string
+          description: Couleurs de fond pour chaque élément
+        borderColor:
+          type: array
+          items:
+            type: string
+          description: Couleurs de bordure pour chaque élément
+        borderWidth:
+          type: integer
+          default: 1
+          description: Épaisseur de la bordure en pixels
+
+paths:
+  /reports:
+    post:
+      tags: [Rapports]
+      summary: Générer un rapport personnalisé
+      description: Crée un rapport basé sur les critères spécifiés
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Rapport généré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Requête invalide
+        '401':
+          description: Non authentifié
+        '403':
+          description: Non autorisé
+          
+  /reports/appointments/stats:
+    get:
+      tags: [Rapports]
+      summary: Obtenir les statistiques des rendez-vous
+      description: Récupère les statistiques des rendez-vous pour une période donnée
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de début (format YYYY-MM-DD)
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de fin (format YYYY-MM-DD)
+      responses:
+        '200':
+          description: Statistiques récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Paramètres de date invalides
+          
+  /reports/charts/appointments-by-status:
+    get:
+      tags: [Graphiques]
+      summary: Données pour le graphique des rendez-vous par statut
+      description: Génère les données pour un graphique circulaire des rendez-vous par statut
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+          description: Date de début (format YYYY-MM-DD)
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+          description: Date de fin (format YYYY-MM-DD)
+      responses:
+        '200':
+          description: Données du graphique récupérées avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+                
+  /reports/export/pdf:
+    get:
+      tags: [Export]
+      summary: Exporter un rapport en PDF
+      description: Génère et télécharge un rapport au format PDF
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de début (format YYYY-MM-DD)
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de fin (format YYYY-MM-DD)
+        - in: query
+          name: reportType
+          required: true
+          schema:
+            type: string
+            enum: [APPOINTMENT_STATS, USER_ACTIVITY, SYSTEM_PERFORMANCE, ERROR_ANALYSIS]
+          description: Type de rapport à exporter
+      responses:
+        '200':
+          description: Fichier PDF généré avec succès
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Paramètres invalides
+          
+  /reports/export/excel:
+    get:
+      tags: [Export]
+      summary: Exporter un rapport en Excel
+      description: Génère et télécharge un rapport au format Excel (XLSX)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de début (format YYYY-MM-DD)
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date de fin (format YYYY-MM-DD)
+        - in: query
+          name: reportType
+          required: true
+          schema:
+            type: string
+            enum: [APPOINTMENT_STATS, USER_ACTIVITY, SYSTEM_PERFORMANCE, ERROR_ANALYSIS]
+          description: Type de rapport à exporter
+      responses:
+        '200':
+          description: Fichier Excel généré avec succès
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Paramètres invalides
